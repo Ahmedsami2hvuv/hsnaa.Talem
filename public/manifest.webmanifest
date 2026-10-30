@@ -1,0 +1,12 @@
+{
+  "name": "معلم حسناء",
+  "short_name": "معلم حسناء",
+  "description": "رفيق حسناء للدراسة والتعلم",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8f6",
+  "theme_color": "#176b58",
+  "icons": []
+}
