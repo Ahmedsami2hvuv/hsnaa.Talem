@@ -1,0 +1,6 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql" url = env("DATABASE_URL") }
+model User { id String @id @default(cuid()) name String role UserRole createdAt DateTime @default(now()) tasks StudyTask[] }
+enum UserRole { PARENT STUDENT }
+model StudyTask { id String @id @default(cuid()) title String subject String detail String? completed Boolean @default(false) dueDate DateTime? createdAt DateTime @default(now()) assignedTo User? @relation(fields: [assignedToId], references: [id]) assignedToId String? }
+model StudySubmission { id String @id @default(cuid()) content String? imageUrl String? audioUrl String? feedback String? createdAt DateTime @default(now()) }
