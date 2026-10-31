@@ -8,6 +8,13 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "hsnaa-db",
+      "database_id": "5bebb53d-33dc-49b6-b9b1-0dea33d52003"
+    }
+  ],
   "observability": {
     "enabled": true
   }
