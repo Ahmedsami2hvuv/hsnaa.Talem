@@ -1,15 +1,52 @@
 "use client";
 import { useEffect, useState } from "react";
-type Task={id:number;subject:string;title:string;detail:string;done:boolean};
-export default function Home(){const [role,setRole]=useState<"student"|"parent">("student");const [tasks,setTasks]=useState<Task[]>([]);const [loading,setLoading]=useState(true);const [subject,setSubject]=useState("الرياضيات");const [title,setTitle]=useState("");const [detail,setDetail]=useState("");const [answer,setAnswer]=useState("");const [notice,setNotice]=useState("");const completed=tasks.filter(t=>t.done).length;const percent=tasks.length?Math.round(completed/tasks.length*100):0;const today=new Intl.DateTimeFormat("ar-IQ",{weekday:"long",day:"numeric",month:"long"}).format(new Date());
-useEffect(()=>{let active=true;fetch("/api/tasks").then(async r=>{const data=await r.json();if(!r.ok||!data.ok)throw new Error(data.error||"تعذر تحميل المهام");if(active)setTasks(data.tasks);}).catch(()=>{if(active)setNotice("تعذر تحميل المهام من قاعدة البيانات.");}).finally(()=>{if(active)setLoading(false);});return()=>{active=false;};},[]);
-async function addTask(){if(!title.trim())return;setNotice("جارٍ حفظ المهمة...");try{const response=await fetch("/api/tasks",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject,title:title.trim(),detail:detail.trim()})});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"تعذر الحفظ");setTasks(old=>[data.task,...old]);setTitle("");setDetail("");setNotice("انحفظت المهمة في قاعدة البيانات بنجاح.");}catch(error){setNotice(error instanceof Error?error.message:"تعذر حفظ المهمة.");}}
-async function toggle(id:number){const task=tasks.find(t=>t.id===id);if(!task)return;const completed=!task.done;setTasks(old=>old.map(t=>t.id===id?{...t,done:completed}:t));try{const response=await fetch(`/api/tasks/${id}`,{method:"PATCH",headers:{"Content-Type":"application/json"},body:JSON.stringify({completed})});const data=await response.json();if(!response.ok||!data.ok)throw new Error(data.error||"تعذر تحديث المهمة");}catch(error){setTasks(old=>old.map(t=>t.id===id?{...t,done:!completed}:t));setNotice(error instanceof Error?error.message:"تعذر تحديث المهمة.");}}
-function submitAnswer(){if(!answer.trim())return;setNotice("وصل جوابك بنجاح. ميزة التصحيح الذكي ستُفعّل بعد ربط مفتاح الذكاء الاصطناعي.");setAnswer("");}
-return <main className="app"><header className="topbar"><div className="brand"><div className="logo">م</div><div><strong>معلم حسناء</strong><small>خطوة بخطوة نحو التفوق</small></div></div><div className="top-actions"><div className="switcher"><button className={role==="student"?"active":""} onClick={()=>setRole("student")}>حساب حسناء</button><button className={role==="parent"?"active":""} onClick={()=>setRole("parent")}>ولي الأمر</button></div><div className="avatar">{role==="student"?"ح":"أ"}</div></div></header>
-<div className="container"><section className="welcome"><div><h1>{role==="student"?"أهلاً حسناء، مستعدة نتعلم؟":"أهلاً بك في لوحة متابعة حسناء"}</h1><p>{role==="student"?"كل يوم نتقدم خطوة، وأنا أساعدك تفهمين الدرس مو بس تحفظيه.":"تابع الدروس والواجبات، وأضف المهام الدراسية لحسناء."}</p></div><div className="date">{today}</div></section>
-<div className="grid"><section className="panel"><div className="panel-head"><div><h2>{role==="student"?"مهامي الدراسية":"جدول مهام الطالبة"}</h2><div className="muted">المهام المحددة لهذا اليوم</div></div><span className="tag">{completed} من {tasks.length} مكتملة</span></div>
-{loading?<div className="empty">جارٍ تحميل المهام...</div>:tasks.length?<div className="tasks">{tasks.map(t=><article className="task" key={t.id}><div className="subject-icon">{t.subject==="الرياضيات"?"➗":t.subject==="اللغة العربية"?"📖":t.subject==="العلوم"?"🔬":"✏️"}</div><div className="task-main"><strong>{t.title}</strong><small>{t.subject} · {t.detail}</small></div><button className={t.done?"tag done":"secondary"} onClick={()=>toggle(t.id)}>{t.done?"مكتملة":"أنجزت"}</button></article>)}</div>:<div className="empty">ماكو مهام حالياً. أضف أول مهمة من حساب ولي الأمر.</div>}
-{role==="student"&&<div className="teacher"><h3>💡 اسألي المعلم</h3><p>اكتبي الشي اللي ما فهمتيه من الدرس، ونجهز لك شرح مبسط وأمثلة مناسبة.</p><textarea value={answer} onChange={e=>setAnswer(e.target.value)} placeholder="مثلاً: ما فهمت شلون أوحّد المقامات..."/><div style={{display:"flex",gap:8,marginTop:10}}><button className="primary" onClick={submitAnswer}>إرسال السؤال</button><button className="secondary" onClick={()=>setNotice("رفع صورة الدفتر والتسجيل الصوتي قيد التجهيز.")}>صورة / صوت</button></div></div>}
-</section><aside><section className="panel"><div className="panel-head"><h2>إنجاز اليوم</h2><span className="muted">{percent}%</span></div><div className="stats"><div className="stat"><b>{tasks.length}</b><span>كل المهام</span></div><div className="stat"><b>{completed}</b><span>مكتملة</span></div><div className="stat"><b>{tasks.length-completed}</b><span>متبقية</span></div></div><div className="progress"><i style={{width:percent+"%"}}/></div><p className="muted">الاستمرار أهم من السرعة، وكل إنجاز صغير يحسب.</p></section>
-{role==="parent"?<section className="panel" style={{marginTop:18}}><div className="panel-head"><h2>إضافة مهمة دراسية</h2></div><div className="form"><select value={subject} onChange={e=>setSubject(e.target.value)}><option>الرياضيات</option><option>اللغة العربية</option><option>العلوم</option><option>التربية الإسلامية</option><option>الاجتماعيات</option><option>اللغة الإنكليزية</option></select><input value={title} onChange={e=>setTitle(e.target.value)} placeholder="عنوان المهمة"/><textarea value={detail} onChange={e=>setDetail(e.target.value)} placeholder="تفاصيل المهمة أو الدرس المطلوب"/><button className="primary" onClick={addTask}>إضافة إلى جدول حسناء</button></div></section>:<section className="panel" style={{marginTop:18}}><h2>رسالة المعلم</h2><p className="muted" style={{lineHeight:2}}>رتّبي وقتك، اقرئي السؤال بهدوء، وإذا واجهتك صعوبة اسأليني. راح نتعلمها سوه خطوة خطوة.</p></section>}</aside></div>{notice&&<div className="toast">{notice}</div>}<footer className="footer">معلم حسناء · منصة تعليمية شخصية · النسخة التأسيسية</footer></div></main>}
+
+type Lesson={id:number;title:string;content:string;subject:string;created_at?:string};
+export default function Home(){
+  const [role,setRole]=useState<"parent"|"student">("parent");
+  const [subject,setSubject]=useState("الرياضيات");
+  const [message,setMessage]=useState("");
+  const [lessons,setLessons]=useState<Lesson[]>([]);
+  const [selected,setSelected]=useState<number|null>(null);
+  const [busy,setBusy]=useState(false);
+  const [notice,setNotice]=useState("");
+  async function loadLessons(){
+    try{const r=await fetch("/api/lessons");const d=await r.json();if(r.ok&&d.ok){setLessons(d.lessons);if(d.lessons.length&&!selected)setSelected(d.lessons[0].id);}}
+    catch{setNotice("تعذر تحميل الدروس حالياً.");}
+  }
+  useEffect(()=>{loadLessons();},[]);
+  async function send(){
+    if(!message.trim()||busy)return;
+    setBusy(true);setNotice("المعلم يجهّز درس حسناء...");
+    try{
+      const r=await fetch("/api/teacher",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({subject,message:message.trim()})});
+      const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||"تعذر تجهيز الدرس");
+      setLessons(old=>[d.lesson,...old]);setSelected(d.lesson.id);setMessage("");setNotice("وصل الدرس إلى دفتر حسناء بنجاح.");
+    }catch(e){setNotice(e instanceof Error?e.message:"حدث خطأ.");}
+    finally{setBusy(false);}
+  }
+  const active=lessons.find(l=>l.id===selected)||lessons[0];
+  return <main className="app">
+    <header className="topbar"><div className="brand"><div className="logo">م</div><div><strong>معلم حسناء</strong><small>مدرسك الذكي خطوة بخطوة</small></div></div>
+      <div className="switcher"><button className={role==="parent"?"active":""} onClick={()=>setRole("parent")}>ولي الأمر</button><button className={role==="student"?"active":""} onClick={()=>setRole("student")}>دفتر حسناء</button></div>
+    </header>
+    <div className="workspace">
+      {role==="parent"?<section className="parent-view">
+        <div className="intro"><span>مساحة ولي الأمر</span><h1>احچي ويا معلم حسناء</h1><p>گله شنو درستوا اليوم، وهو يرتب الدرس والشرح والتمارين حتى توصل مباشرة لدفتر حسناء.</p></div>
+        <div className="chat-card">
+          <label>المادة الدراسية</label><select value={subject} onChange={e=>setSubject(e.target.value)}><option>الرياضيات</option><option>اللغة العربية</option><option>العلوم</option><option>التربية الإسلامية</option><option>الاجتماعيات</option><option>اللغة الإنكليزية</option></select>
+          <label>رسالتك للمعلم</label><textarea value={message} onChange={e=>setMessage(e.target.value)} placeholder="مثلاً: اليوم درسنا الكسور الاعتيادية، اشرح لحسناء توحيد المقامات بالتدريج، واعطها أمثلة وتمارين تناسب السادس الابتدائي..." rows={7}/>
+          <button className="send" disabled={busy||!message.trim()} onClick={send}>{busy?"جاري إعداد الدرس...":"إرسال للمعلم وتجهيز درس حسناء"}</button>
+          {notice&&<p className="notice">{notice}</p>}
+        </div>
+        <div className="recent"><h2>الدروس التي أرسلتها لحسناء</h2>{lessons.length?lessons.slice(0,5).map(l=><button key={l.id} onClick={()=>{setSelected(l.id);setRole("student");}}><span>{l.subject}</span><strong>{l.title}</strong></button>):<p>بعد ماكو دروس. أول ما ترسل درس، راح يظهر هنا.</p>}</div>
+      </section>:<section className="student-view">
+        <div className="notebook-head"><span>دفتر حسناء</span><h1>أهلاً حسناء 🌷</h1><p>هنا توصلك الدروس من المعلم. اقرئي بهدوء وحاولي تحلين التمارين بنفسچ.</p></div>
+        <div className="notebook-layout"><nav className="lesson-list"><h2>دروسي</h2>{lessons.map(l=><button className={active?.id===l.id?"chosen":""} key={l.id} onClick={()=>setSelected(l.id)}><small>{l.subject}</small><strong>{l.title}</strong></button>)}{!lessons.length&&<p>دروسچ الجديدة راح تظهر هنا.</p>}</nav>
+          <article className="lesson-paper">{active?<><div className="paper-meta">{active.subject} · درس من المعلم</div><h2>{active.title}</h2><div className="lesson-content">{active.content}</div></>:<div className="empty-paper"><h2>دفترچ جاهز ✨</h2><p>من يرسل ولي الأمر درساً، راح يوصلك هنا الشرح والأمثلة والتمارين.</p></div>}</article>
+        </div>
+      </section>}
+    </div>
+    <footer className="footer">معلم حسناء · تعلم بالفهم والممارسة</footer>
+  </main>;
+}
